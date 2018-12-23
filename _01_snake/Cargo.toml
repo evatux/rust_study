@@ -1,0 +1,8 @@
+[package]
+name = "_01_snake"
+version = "0.1.0"
+authors = ["eva <evatux@gmail.com>"]
+
+[dependencies]
+rand = "*"
+termion = "*"
