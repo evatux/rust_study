@@ -20,18 +20,29 @@ impl Snake {
         s
     }
 
-    pub fn head(&self) -> &Pos {
-        &self.body[self.head_idx]
+    pub fn head(&self) -> Pos {
+        self.body[self.head_idx]
     }
 
-    pub fn tail(&self) -> &Pos {
-        &self.body[self.tail_idx()]
+    pub fn tail(&self) -> Pos {
+        self.body[self.tail_idx()]
+    }
+
+    pub fn can_step(&self, pos: Pos) -> bool {
+        match self.body.iter().position(|ref x| x == &&pos) {
+            None => true,
+            Some(v) => v == self.tail_idx(),
+        }
     }
 
     pub fn step(&mut self, pos: Pos) {
         let tidx = self.tail_idx();
         self.body[tidx] = pos;
         self.head_idx = tidx;
+    }
+
+    pub fn can_grow(&self, pos: Pos) -> bool {
+        !self.body.contains(&pos)
     }
 
     pub fn grow(&mut self, new_head: Pos) {
@@ -47,11 +58,17 @@ impl Snake {
 #[test]
 fn simple() {
     let mut snake = Snake::with_capacity(40, Pos(1, 1));
-    assert_eq!(snake.head(), &Pos(1, 1));
+    assert_eq!(snake.head(), Pos(1, 1));
     snake.step(Pos(1, 2));
-    assert_eq!(snake.head(), &Pos(1, 2));
+    assert_eq!(snake.head(), Pos(1, 2));
     snake.grow(Pos(2, 2));
-    assert_eq!(snake.head(), &Pos(2, 2));
-    assert_eq!(snake.tail(), &Pos(1, 2));
+    assert_eq!(snake.head(), Pos(2, 2));
+    assert_eq!(snake.tail(), Pos(1, 2));
     assert_eq!(snake.size, 2);
+    snake.grow(Pos(2, 3));
+    snake.grow(Pos(1, 3));
+    assert!(snake.can_step(Pos(1, 2)));
+    assert!(snake.can_grow(Pos(1, 4)));
+    assert!(!snake.can_step(Pos(2, 3)));
+    assert!(!snake.can_grow(Pos(1, 2)));
 }

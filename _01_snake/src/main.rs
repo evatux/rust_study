@@ -20,25 +20,24 @@ impl Pos {
     }
 }
 
-fn print_at_pos(stdout: &mut Screen, offset: Pos, s: &str) {
-    write!(stdout, "{}{}", offset.into_cursor_pos(), s).unwrap();
+fn print_at_pos(stdout: &mut Screen, pos: Pos, s: &str) {
+    write!(stdout, "{}{}", pos.into_cursor_pos(), s).unwrap();
 }
 
-fn draw_border(stdout: &mut Screen, size: Pos, offset: Pos, c: char) {
+fn draw_border(stdout: &mut Screen, size: Pos, base: Pos, c: char) {
     let bs = c.to_string();
 
-    write!(stdout, "{}", offset.into_cursor_pos()).unwrap();
+    print_at_pos(stdout, base, "");
     for _ in 0 .. size.1 {
         write!(stdout, "{}", &bs).unwrap();
     }
 
     for i in 1 .. size.0 - 1 {
-        print_at_pos(stdout, &offset + &Pos(i, 0), &bs);
-        print_at_pos(stdout, &offset + &Pos(i, size.1 - 1), &bs);
+        print_at_pos(stdout, base + Pos(i, 0), &bs);
+        print_at_pos(stdout, base + Pos(i, size.1 - 1), &bs);
     }
 
-    write!(stdout, "{}", (&offset + &Pos(size.0 - 1, 0)).into_cursor_pos())
-           .unwrap();
+    print_at_pos(stdout, base + Pos(size.0 - 1, 0), "");
     for _ in 0 .. size.1 {
         write!(stdout, "{}", &bs).unwrap();
     }
