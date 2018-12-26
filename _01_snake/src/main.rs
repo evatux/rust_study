@@ -1,7 +1,8 @@
 extern crate termion;
 
-mod pos;
-mod snake;
+mod utypes;
+mod game;
+mod draw;
 
 use std::io::{Write, stdout, stdin};
 
@@ -9,59 +10,25 @@ use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 
-use pos::Pos;
-use snake::Snake;
+use utypes::Pos;
+use utypes::Board;
+use game::Game;
+use draw::GameDrawer;
 
 type Screen = termion::raw::RawTerminal<std::io::Stdout>;
 
-impl Pos {
-    fn into_cursor_pos(&self) -> termion::cursor::Goto {
-        termion::cursor::Goto(self.1 + 1, self.0 + 1)
-    }
-}
+fn play() {
+    let mut game = Game::new(Pos{x: 16, y: 16}, 4, false);
+    let mut drawer = GameDrawer::new(&game);
 
-fn print_at_pos(stdout: &mut Screen, pos: Pos, s: &str) {
-    write!(stdout, "{}{}", pos.into_cursor_pos(), s).unwrap();
-}
+    drawer.init(&game);
 
-fn draw_border(stdout: &mut Screen, size: Pos, base: Pos, c: char) {
-    let bs = c.to_string();
-
-    print_at_pos(stdout, base, "");
-    for _ in 0 .. size.1 {
-        write!(stdout, "{}", &bs).unwrap();
-    }
-
-    for i in 1 .. size.0 - 1 {
-        print_at_pos(stdout, base + Pos(i, 0), &bs);
-        print_at_pos(stdout, base + Pos(i, size.1 - 1), &bs);
-    }
-
-    print_at_pos(stdout, base + Pos(size.0 - 1, 0), "");
-    for _ in 0 .. size.1 {
-        write!(stdout, "{}", &bs).unwrap();
-    }
-}
-
-fn foo() {
-    let _stdin = stdin();
-    let mut stdout: Screen = stdout().into_raw_mode().unwrap();
-
-    write!(stdout, "{}", termion::clear::All);
-
-    draw_border(&mut stdout, Pos(10, 10), Pos(16, 3), '█');
-
-    write!(stdout, "{}\n\r", termion::style::Reset);
-    stdout.flush().unwrap();
+    drawer.fini(&game);
+    // stdout.flush().unwrap();
 }
 
 fn main() {
-    foo();
-
-    let mut snake = Snake::with_capacity(40, Pos(1, 1));
-    snake.step(Pos(1, 2));
-    snake.grow(Pos(2, 2));
-    println!("Snake tail is at {:?}", snake.tail());
+    play();
 }
 
 #[allow(dead_code)]
