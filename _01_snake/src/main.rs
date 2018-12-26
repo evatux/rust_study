@@ -18,7 +18,7 @@ use draw::GameDrawer;
 type Screen = termion::raw::RawTerminal<std::io::Stdout>;
 
 fn play() {
-    let mut game = Game::new(Pos{x: 16, y: 16}, 4, false);
+    let mut game = Game::new(Board{x: 16, y: 16}, 4, false);
     let mut drawer = GameDrawer::new(&game);
 
     drawer.init(&game);

@@ -58,6 +58,7 @@ impl GameDrawer {
         write!(self.screen, "{}", termion::clear::All);
         self.draw_border(game);
         self.draw_snake(game);
+        self.draw_food(game);
     }
 
     pub fn fini(&mut self, game: &Game) {
@@ -101,8 +102,14 @@ impl GameDrawer {
         for p in (&game.snake).into_iter().take(1) {
             self.print_at_pos(board_offset + p, SYMBOL_SNAKE_HEAD);
         }
+
         for p in (&game.snake).into_iter().skip(1) {
             self.print_at_pos(board_offset + p, SYMBOL_SNAKE_BODY);
         }
+    }
+
+    fn draw_food(&mut self, game: &Game) {
+        let board_offset = self.board_offset;
+        self.print_at_pos(board_offset + game.food.pos, SYMBOL_FOOD);
     }
 }

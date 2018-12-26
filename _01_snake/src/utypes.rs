@@ -26,10 +26,3 @@ impl Sub for Pos {
         Pos { x: self.x - other.x, y: self.y - other.y }
     }
 }
-
-pub enum Dir {
-    Down,
-    Left,
-    Right,
-    Up,
-}

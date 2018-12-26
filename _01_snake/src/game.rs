@@ -8,7 +8,18 @@ use self::rand::Rng;
 
 use utypes::Pos;
 use utypes::Board;
-use utypes::Dir;
+
+pub enum Dir {
+    Down,
+    Left,
+    Right,
+    Up,
+}
+
+pub enum Command {
+    Move(Dir),
+    Exit,
+}
 
 pub struct Food {
     pub pos: Pos,
@@ -27,6 +38,15 @@ pub struct Game {
     pub current_snake_dir: Dir,
     pub food: Food,
     pub periodic_world: bool,
+}
+
+pub struct GameSceneUpdate {
+    pub new_head_pos: Pos,
+    pub prev_head_pos: Pos,
+    pub prev_head_now_body: bool,
+    pub prev_tail_pos: Pos,
+    pub prev_tail_remains: bool,
+    pub food_regenerated: bool,
 }
 
 impl Snake {
@@ -124,6 +144,17 @@ impl Game {
                 break;
             }
         }
+    }
+
+    pub fn exec(&mut self, cmd: Command) -> Option<GameSceneUpdate> {
+        match cmd {
+            Command::Move(dir) => self.step(dir),
+            Command::Exit => None,
+        }
+    }
+
+    fn step(&mut self, dir: Dir) -> Option<GameSceneUpdate> {
+        None
     }
 }
 
