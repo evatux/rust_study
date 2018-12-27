@@ -5,8 +5,8 @@ use std::ops::Sub;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Pos {
-    pub x: u16,
-    pub y: u16,
+    pub x: i16,
+    pub y: i16,
 }
 
 pub type Board = Pos;
@@ -25,4 +25,10 @@ impl Sub for Pos {
     fn sub(self, other: Pos) -> Pos {
         Pos { x: self.x - other.x, y: self.y - other.y }
     }
+}
+
+#[test]
+fn pos_simple_test() {
+    assert_eq!(Pos{x: 1, y: 2}, Pos{x: 2, y: 0} + Pos{x: -1, y: 2});
+    assert_eq!(Pos{x: 1, y: 2}, Pos{x: 2, y: 1} - Pos{x: 1, y: -1});
 }
