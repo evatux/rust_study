@@ -24,6 +24,14 @@ pub enum Command {
     Exit,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum Color {
+    White,
+    Blue,
+    Green,
+    Red,
+}
+
 pub struct Food {
     pub pos: Pos,
 }
@@ -31,14 +39,14 @@ pub struct Food {
 #[derive(Debug)]
 pub struct Snake {
     body: Vec<Pos>,
-    size: usize,
     head_idx: usize,
+    pub dir: Dir,
+    pub color: Color,
 }
 
 pub struct Game {
     pub board: Board,
     pub snake: Snake,
-    pub snake_dir: Dir,
     pub food: Food,
     pub periodic_world: bool,
 }
@@ -64,8 +72,9 @@ impl Snake {
     pub fn with_capacity(size: usize, head: Pos) -> Snake {
         let mut s = Snake {
             body: Vec::with_capacity(size),
-            size: 1,
             head_idx: 0,
+            dir: Dir::Right,
+            color: Color::Green,
         };
         s.body.push(head);
         s
@@ -94,7 +103,6 @@ impl Snake {
 
     pub fn grow(&mut self, new_head: Pos) {
         self.body.insert(self.head_idx, new_head);
-        self.size += 1;
     }
 
     pub fn contains(&self, pos: Pos) -> bool {
@@ -102,7 +110,7 @@ impl Snake {
     }
 
     fn tail_idx(&self) -> usize {
-        (self.size + self.head_idx - 1) % self.size
+        (self.body.len() + self.head_idx - 1) % self.body.len()
     }
 }
 
@@ -120,17 +128,17 @@ impl Game {
             y: rng.gen_range(0, board.y),
         };
 
-        let mut snake = Snake::with_capacity(
-            2usize * board.x as usize * board.y as usize, snake_pos);
+        let capacity = 2usize * board.x as usize * board.y as usize;
+        let mut snake = Snake::with_capacity(capacity, snake_pos);
 
-        for x in 1 .. snake_len {
-            snake.grow(snake_pos + Pos{x, y: 0})
+        let grow_dir_vec = snake.dir.into_pos();
+        for l in 1 .. snake_len {
+            snake.grow(snake_pos + l * grow_dir_vec)
         }
 
         let mut game = Game {
             board,
             snake,
-            snake_dir: Dir::Right,
             food: Food { pos: Pos{x: 0, y: 0} }, // tentative
             periodic_world
         };
@@ -159,7 +167,7 @@ impl Game {
         match cmd {
             Command::Move(dir) => self.step(dir),
             Command::Nop => {
-                let dir = self.snake_dir;
+                let dir = self.snake.dir;
                 self.step(dir)
             }
             Command::Exit => None,
@@ -167,18 +175,18 @@ impl Game {
     }
 
     fn normalize_dir(&self, dir: Dir) -> Dir {
-        let snake_dir_vec = self.snake_dir.into_pos();
+        let snake_dir_vec = self.snake.dir.into_pos();
         let vec = dir.into_pos();
 
         match vec + snake_dir_vec {
-            Pos{x: 0, y: 0} => self.snake_dir,
+            Pos{x: 0, y: 0} => self.snake.dir,
             _ => dir,
         }
     }
 
     fn step(&mut self, dir: Dir) -> Option<GameUpdate> {
         let dir = self.normalize_dir(dir);
-        self.snake_dir = dir;
+        self.snake.dir = dir;
 
         let head_cur_pos = self.snake.head();
         let mut head_new_pos = head_cur_pos + dir.into_pos();
@@ -243,11 +251,11 @@ impl<'a> Iterator for SnakeIterator<'a> {
     type Item = Pos;
 
     fn next(&mut self) -> Option<Pos> {
-        if self.index == self.snake.size {
+        if self.index == self.snake.body.len() {
             return None;
         }
 
-        let idx = (self.snake.head_idx + self.index) % self.snake.size;
+        let idx = (self.snake.head_idx + self.index) % self.snake.body.len();
         self.index += 1;
 
         Some(self.snake.body[idx])
@@ -263,7 +271,7 @@ fn snake_simple_test() {
     snake.grow(Pos{x: 2, y: 2});
     assert_eq!(snake.head(), Pos{x: 2, y: 2});
     assert_eq!(snake.tail(), Pos{x: 1, y: 2});
-    assert_eq!(snake.size, 2);
+    assert_eq!(snake.body.len(), 2);
     snake.grow(Pos{x: 2, y: 3});
     snake.grow(Pos{x: 1, y: 3});
     assert!(snake.can_step(Pos{x: 1, y: 2}));

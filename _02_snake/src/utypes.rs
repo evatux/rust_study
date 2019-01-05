@@ -2,6 +2,7 @@
 
 use std::ops::Add;
 use std::ops::Sub;
+use std::ops::Mul;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Pos {
@@ -27,8 +28,18 @@ impl Sub for Pos {
     }
 }
 
+impl Mul<Pos> for i16 {
+    type Output = Pos;
+
+    fn mul(self, other: Pos) -> Pos {
+        Pos { x: self * other.x, y: self * other.y }
+    }
+}
+
 #[test]
 fn pos_simple_test() {
     assert_eq!(Pos{x: 1, y: 2}, Pos{x: 2, y: 0} + Pos{x: -1, y: 2});
     assert_eq!(Pos{x: 1, y: 2}, Pos{x: 2, y: 1} - Pos{x: 1, y: -1});
+    assert_eq!(Pos{x: 4, y: -6}, 2 * Pos{x: 2, y: -3});
+    assert_eq!(Pos{x: -4, y: 6}, -2 * Pos{x: 2, y: -3});
 }

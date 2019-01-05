@@ -2,12 +2,14 @@
 
 extern crate termion;
 
+use std::fmt;
 use std::io::{Write, stdout};
 
 use termion::raw::IntoRawMode;
 
 use utypes::Pos;
 use utypes::Board;
+use game;
 use game::Game;
 use game::GameUpdate;
 
@@ -22,13 +24,24 @@ type Screen = termion::raw::RawTerminal<std::io::Stdout>;
 
 pub struct GameDrawer {
     screen: Screen,
-    base_offset: Pos,   // game canvas offset
     board_offset: Pos,  // game board offset ( > base)
 }
 
 impl Pos {
     fn into_cursor_pos(&self) -> termion::cursor::Goto {
         termion::cursor::Goto((self.x + 1) as u16, (self.y + 1) as u16)
+    }
+}
+
+impl fmt::Display for game::Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use termion::color;
+        match self {
+            game::Color::White => color::Fg(color::White).fmt(f),
+            game::Color::Blue => color::Fg(color::Blue).fmt(f),
+            game::Color::Green => color::Fg(color::Green).fmt(f),
+            game::Color::Red => color::Fg(color::Red).fmt(f),
+        }
     }
 }
 
@@ -47,7 +60,6 @@ impl GameDrawer {
 
         GameDrawer {
             screen: stdout().into_raw_mode().unwrap(),
-            base_offset: Pos{x: 1, y: 1},
             board_offset: Pos{x: 3, y: 3},
         }
     }
@@ -55,7 +67,7 @@ impl GameDrawer {
     pub fn init(&mut self, game: &Game) {
         write!(self.screen, "{}{}",
                termion::clear::All,
-               termion::cursor::Hide);
+               termion::cursor::Hide).unwrap();
         self.draw_border(game);
         self.draw_snake(game);
         self.draw_food(game);
@@ -65,7 +77,7 @@ impl GameDrawer {
     pub fn fini(&mut self, game: &Game) {
         write!(self.screen, "{}\n\r{}{}\nGame over!\n\r\n",
                (self.board_offset + game.board).into_cursor_pos(),
-               termion::style::Reset, termion::cursor::Show);
+               termion::style::Reset, termion::cursor::Show).unwrap();
     }
 
     pub fn flush(&mut self) {
@@ -73,6 +85,8 @@ impl GameDrawer {
     }
 
     pub fn update_scene(&mut self, game: &Game, update: &GameUpdate) {
+        self.set_color(game.snake.color);
+
         if let Some(pos) = update.head_prev_pos {
             self.board_print_at_pos(pos, SYMBOL_SNAKE_BODY);
         }
@@ -81,15 +95,26 @@ impl GameDrawer {
             self.board_print_at_pos(pos, SYMBOL_EMPTY);
         }
 
+        self.board_print_at_pos(game.snake.head(), SYMBOL_SNAKE_HEAD);
+
+        self.reset_color();
+
         if update.food_renew {
             self.board_print_at_pos(game.food.pos, SYMBOL_FOOD);
         }
 
-        self.board_print_at_pos(game.snake.head(), SYMBOL_SNAKE_HEAD);
         self.flush();
     }
 
     /* private methods */
+
+    fn set_color(&mut self, color: game::Color) {
+        write!(self.screen, "{}", color).unwrap();
+    }
+
+    fn reset_color(&mut self) {
+        write!(self.screen, "{}", game::Color::White).unwrap();
+    }
 
     fn board_print_at_pos(&mut self, pos: Pos, s: &str) {
         let pos = self.board_offset + pos;
@@ -130,6 +155,8 @@ impl GameDrawer {
     fn draw_snake(&mut self, game: &Game) {
         let board_offset = self.board_offset;
 
+        self.set_color(game.snake.color);
+
         for p in (&game.snake).into_iter().take(1) {
             self.print_at_pos(board_offset + p, SYMBOL_SNAKE_HEAD);
         }
@@ -137,6 +164,8 @@ impl GameDrawer {
         for p in (&game.snake).into_iter().skip(1) {
             self.print_at_pos(board_offset + p, SYMBOL_SNAKE_BODY);
         }
+
+        self.reset_color();
     }
 
     fn draw_food(&mut self, game: &Game) {
